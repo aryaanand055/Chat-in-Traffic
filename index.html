@@ -2,212 +2,77 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Traffic Signal Chat</title>
+    <meta charset="utf-8" />
+    <title>Traffic Signal Chat — Leaflet + Firebase</title>
+
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        }
 
-        #map {
-            height: 100vh;
-            width: 100%;
-        }
+    <!-- Firebase (compat, matches previous usage) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.8/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.8/firebase-database-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
 
-        /* Chat panel */
-        #chat-panel {
-            position: fixed;
-            top: 10%;
-            right: 20px;
-            width: 320px;
-            height: 80%;
-            background: #fff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            border-radius: 16px;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 1000;
-        }
-
-        #chat-header {
-            background: #4a90e2;
-            color: white;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        #messages {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            background: #f9f9f9;
-        }
-
-        .message {
-            margin: 6px 0;
-            padding: 10px;
-            border-radius: 12px;
-            max-width: 75%;
-            font-size: 14px;
-            line-height: 1.4;
-            clear: both;
-        }
-
-        .message.user {
-            background: #4a90e2;
-            color: white;
-            float: right;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.other {
-            background: #ececec;
-            float: left;
-            border-bottom-left-radius: 4px;
-        }
-
-        #input-area {
-            display: flex;
-            border-top: 1px solid #ddd;
-        }
-
-        #chat-input {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            outline: none;
-            font-size: 14px;
-        }
-
-        #send-btn {
-            background: #4a90e2;
-            color: white;
-            border: none;
-            padding: 0 20px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        #send-btn:hover {
-            background: #357abd;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
+
     <div id="map"></div>
 
-    <!-- Chat Panel -->
-    <div id="chat-panel">
-        <div id="chat-header">Chat</div>
-        <div id="messages"></div>
-        <div id="input-area">
-            <input type="text" id="chat-input" placeholder="Type a message..." />
+    <!-- Chat panel (right) -->
+    <div id="chatPanel" class="chat-panel" aria-hidden="true">
+        <div class="chat-header">
+            <div id="chatTitle">Signal Chat</div>
+            <div class="actions">
+                <button id="minimizeChatBtn" class="icon-btn" title="Minimize">−</button>
+            </div>
+        </div>
+
+        <div class="chat-body">
+            <div class="messages" id="messages"></div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="preset-row">
+                <select id="preset-select" aria-label="Select preset message">
+                    <option value="">— Select a message —</option>
+                    <option value="Heavy traffic due to accident">🚧 Heavy traffic due to accident</option>
+                    <option value="Traffic moving slowly">🐢 Traffic moving slowly</option>
+                    <option value="Road blocked temporarily">⛔ Road blocked temporarily</option>
+                    <option value="Signal not working">⚠️ Signal not working</option>
+                    <option value="Police checking ongoing">👮 Police checking ongoing</option>
+                    <option value="Flooded road">🌊 Flooded road</option>
+                    <option value="Construction work ahead">🏗️ Construction work ahead</option>
+                    <option value="Clear road">✅ Clear road</option>
+                </select>
+            </div>
+            <input id="custom-note" type="text" placeholder="Add details (optional)" />
             <button id="send-btn">Send</button>
         </div>
     </div>
 
-    <script>
-        // Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyA7JnDMzfWKVhlX7eeQb8xSKCMXg1fvwN8",
-            authDomain: "chat-in-traffic.firebaseapp.com",
-            databaseURL: "https://chat-in-traffic-default-rtdb.firebaseio.com",
-            projectId: "chat-in-traffic",
-            storageBucket: "chat-in-traffic.firebasestorage.app",
-            messagingSenderId: "725368377159",
-            appId: "1:725368377159:web:45fd4cf3ec5abd57e14662",
-            measurementId: "G-6KXE075NJR"
-        };
+    <!-- Video/simulation popup (left) -->
+    <div id="videoPanel" class="video-popup w-50" aria-hidden="true">
+        <div class="video-header">
+            <div id="videoTitle">Simulation</div>
+            <div class="v-actions">
+                <button id="videoMinimizeBtn" title="Minimize">−</button>
+                <button id="videoMaximizeBtn" title="Maximize">⬜</button>
+            </div>
+        </div>
+        <div class="video-body" id="videoBody">
+            <video id="simulationVideo" autoplay muted loop playsinline>
+                <source src="simulation.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+    <script src="script.js"></script>
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        let currentSignalId = null;
-        let userId = "user_" + Math.floor(Math.random() * 10000);
-
-        // Leaflet map
-        const map = L.map('map').setView([11.0168, 76.9558], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Example signals
-        const signals = [
-            { id: "signal_1", name: "Neelambur Junction Signal", coords: [11.050513, 77.103360] },
-            { id: "signal_2", name: "Chinniyampalayam Signal", coords: [11.048863, 77.070837] },
-            { id: "signal_3", name: "SITRA / Airport Junction Signal", coords: [11.063360, 77.040418] },
-            { id: "signal_4", name: "KMCH / Goldwins Signal", coords: [11.041100, 77.040300] },
-            { id: "signal_5", name: "CODISSIA Junction Signal", coords: [11.042632, 77.026306] },
-            { id: "signal_6", name: "Hope College (Peelamedu) Signal", coords: [11.025767, 77.016610] }
-        ];
-
-        // Chat elements
-        const chatPanel = document.getElementById("chat-panel");
-        const chatHeader = document.getElementById("chat-header");
-        const messagesDiv = document.getElementById("messages");
-        const chatInput = document.getElementById("chat-input");
-        const sendBtn = document.getElementById("send-btn");
-
-        let chatListener = null;
-
-        // Function to load chat
-        function loadChat(signal) {
-            // Clear previous messages
-            messagesDiv.innerHTML = "";
-            if (chatListener) {
-                chatListener.off();
-            }
-            currentSignalId = signal.id;
-            chatHeader.innerText = signal.name + " Chat";
-            chatPanel.style.display = "flex";
-
-            // Listen for new messages
-            chatListener = db.ref("chats/" + signal.id);
-            chatListener.on("child_added", (snapshot) => {
-                const msg = snapshot.val();
-                const div = document.createElement("div");
-                div.classList.add("message");
-                div.classList.add(msg.user === userId ? "user" : "other");
-                div.innerText = msg.text;
-                messagesDiv.appendChild(div);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            });
-        }
-
-        // Add signals to map
-        signals.forEach(signal => {
-            const marker = L.marker(signal.coords).addTo(map);
-            marker.bindTooltip(signal.name, { permanent: false, direction: "top" });
-            marker.on("click", () => {
-                loadChat(signal);
-            });
-        });
-
-        // Send message
-        sendBtn.addEventListener("click", () => {
-            const text = chatInput.value.trim();
-            if (text && currentSignalId) {
-                db.ref("chats/" + currentSignalId).push({
-                    user: userId,
-                    text: text,
-                    timestamp: Date.now()
-                });
-                chatInput.value = "";
-            }
-        });
-        chatInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") sendBtn.click();
-        });
-    </script>
+   
 </body>
 
 </html>
