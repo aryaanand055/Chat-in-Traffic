@@ -23,6 +23,19 @@
 
     <div id="map"></div>
 
+    <!-- Speed and Traffic Data -->
+    <div id="traffic-toggle">🚦 Traffic Info</div>
+
+    <div id="traffic-box">
+        <span><b>Signal:</b> <span id="traffic-signal">--</span></span>
+        <span><b>Spd:</b> <span id="traffic-speed">--</span>km/h</span>
+        <span><b>Spd FF:</b> <span id="traffic-freeflow">--</span>km/h</span>
+        <span><b>TT:</b> <span id="traffic-travel">--</span>s</span>
+        <span><b>TTF:</b> <span id="traffic-freeflowtime">--</span>s</span>
+        <span><b>Clo:</b> <span id="traffic-closure">--</span></span>
+    </div>
+
+
     <!-- Chat panel (right) -->
     <div id="chatPanel" class="chat-panel" aria-hidden="true">
         <div class="chat-header">
@@ -72,7 +85,7 @@
     </div>
     <script src="script.js"></script>
 
-   
+
 </body>
 
 </html>

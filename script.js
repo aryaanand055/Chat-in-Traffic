@@ -39,8 +39,14 @@ const signals = [
 signals.forEach(sig => {
     const marker = L.marker(sig.coords).addTo(map);
     marker.bindTooltip(sig.name, { className: 'my-tooltip', direction: 'top', offset: [0, -10] });
-    marker.on("click", () => {
+    marker.on("click", async () => {
         openChatForSignal(sig);
+        try {
+            const data = await getTrafficData(sig);
+            updateTrafficBox(data);
+        } catch (err) {
+            console.error("Failed to fetch traffic data:", err);
+        }
     });
 
 });
@@ -301,3 +307,67 @@ function hidePanels() {
 
 //    Initial note: if you want chat to auto-open the nearest signal based on GPS,
 //    we can add geolocation logic. For now click triggers openChatForSignal.
+
+
+// Traffic Updates
+// Cache object
+// ---- Config ----
+const TOMTOM_API_KEY = "JNbfhfjPFBtulLotGmJHJPrEKlOw8bVR"; // replace with your key
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Cache object { signalId: { data: {...}, timestamp: number } }
+const trafficCache = {};
+
+
+
+// ---- Function to fetch/cached traffic data ----
+async function getTrafficData(signal) {
+    const now = Date.now();
+
+    // If cached and within 5 minutes, return cached data
+    if (trafficCache[signal.id] && (now - trafficCache[signal.id].timestamp < CACHE_DURATION)) {
+        return trafficCache[signal.id].data;
+    }
+
+    const url = `https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/xml?key=${TOMTOM_API_KEY}&point=${signal.coords[0]},${signal.coords[1]}`;
+
+    try {
+        const response = await fetch(url);
+        const xmlText = await response.text();
+
+        // Parse XML
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+
+        const data = {
+            signal: signal.name,
+            speed: xmlDoc.querySelector("currentSpeed")?.textContent || "--",
+            freeFlow: xmlDoc.querySelector("freeFlowSpeed")?.textContent || "--",
+            travel: xmlDoc.querySelector("currentTravelTime")?.textContent || "--",
+            freeFlowTime: xmlDoc.querySelector("freeFlowTravelTime")?.textContent || "--",
+            confidence: xmlDoc.querySelector("confidence")?.textContent || "--",
+            closure: xmlDoc.querySelector("roadClosure")?.textContent === "true" ? "Yes" : "No"
+        };
+
+        // Cache result
+        trafficCache[signal.id] = { data, timestamp: now };
+        return data;
+
+    } catch (err) {
+        console.error("Error fetching traffic data:", err);
+        return null;
+    }
+}
+
+// ---- Function to update HTML ----
+function updateTrafficBox(data) {
+    if (!data) return;
+
+    document.getElementById("traffic-signal").textContent = data.signal;
+    document.getElementById("traffic-speed").textContent = data.speed;
+    document.getElementById("traffic-freeflow").textContent = data.freeFlow;
+    document.getElementById("traffic-travel").textContent = data.travel;
+    document.getElementById("traffic-freeflowtime").textContent = data.freeFlowTime;
+    // document.getElementById("traffic-confidence").textContent = data.confidence;
+    document.getElementById("traffic-closure").textContent = data.closure;
+}

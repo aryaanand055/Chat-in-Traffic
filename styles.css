@@ -276,3 +276,46 @@ Video popup (left)
         --size: 260px;
     }
 }
+
+.info-box {
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 13px;
+}
+
+#traffic-box {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #f9f9f9;
+    padding: 4px 8px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    /* display: none; */
+    z-index: 1000;
+    font-size: 11px;
+    font-family: Arial, sans-serif;
+    color: #333;
+    white-space: nowrap;
+}
+
+#traffic-toggle {
+    position: absolute;
+    top: 40px;
+    /* Slightly below */
+    right: 10px;
+    background: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 1000;
+    font-size: 12px;
+}
+
+/* Inline values with spacing */
+#traffic-box span {
+    margin-right: 8px;
+}
