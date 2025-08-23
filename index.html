@@ -77,9 +77,24 @@
                 <button id="videoMaximizeBtn" title="Maximize">⬜</button>
             </div>
         </div>
+        <div id="videoLoading" style="
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: sans-serif;
+">
+            Loading video...
+        </div>
+
         <div class="video-body" id="videoBody">
             <video id="simulationVideo" autoplay muted loop playsinline>
-                <source src="simulation.mp4" type="video/mp4">
+                <source src="videos/simulation.mp4" type="video/mp4">
             </video>
         </div>
     </div>

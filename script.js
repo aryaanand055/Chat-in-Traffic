@@ -1,3 +1,4 @@
+console.log("running sciprt...")
 
 const firebaseConfig = {
     apiKey: "AIzaSyA7JnDMzfWKVhlX7eeQb8xSKCMXg1fvwN8",
@@ -27,13 +28,12 @@ const map = L.map('map').setView([11.0168, 76.9958], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 const signals = [
-    { id: "signal_1", name: "Singanallur Junction", coords: [11.000510, 77.029844] },
-    { id: "signal_2", name: "Hopes Peelamedu", coords: [11.026399, 77.021142] },
-    { id: "signal_3", name: "Townhall", coords: [10.993512, 76.960833] },
-    { id: "signal_4", name: "The Lakshmi Mills", coords: [11.013075, 76.986275] },
-    { id: "signal_5", name: "SITRA", coords: [11.038178, 77.037561] },
+    { id: "signal_1", name: "Singanallur Junction", coords: [11.000510, 77.029844], video: "videos/video1.mp4" },
+    { id: "signal_2", name: "Hopes Peelamedu", coords: [11.026399, 77.021142], video: "videos/video4.mp4" },
+    { id: "signal_3", name: "Townhall", coords: [10.993512, 76.960833], video: "videos/video3.mp4" },
+    { id: "signal_4", name: "The Lakshmi Mills", coords: [11.013075, 76.986275], video: "videos/simulation.mp4" },
+    { id: "signal_5", name: "SITRA", coords: [11.038178, 77.037561], video: "videos/video2.mp4" },
 ];
-
 
 // Add markers with hover tooltip and click handler
 signals.forEach(sig => {
@@ -47,6 +47,19 @@ signals.forEach(sig => {
         } catch (err) {
             console.error("Failed to fetch traffic data:", err);
         }
+        const videoEl = document.getElementById("simulationVideo");
+        const sourceEl = videoEl.querySelector("source");
+
+        sourceEl.src = sig.video;
+        videoEl.load();
+        videoEl.oncanplay = () => {
+            loadingEl.style.display = "none"; 
+            videoEl.play();
+        };
+
+        videoEl.onerror = () => {
+            loadingEl.textContent = "Failed to load video 😢";
+        };
     });
 
 });
@@ -246,7 +259,7 @@ videoMinimizeBtn.addEventListener('click', () => {
         document.getElementById("videoPanel").classList.remove("maximized")
 
         document.getElementById("videoBody").classList.remove("d-none")
-        document.getElementById("videoPanel").classList.add("w-50")
+        // document.getElementById("videoPanel").classList.add("w-50")
         document.getElementById("videoPanel").classList.remove("w-75")
         document.getElementById("videoPanel").classList.remove("w-25")
     } else {
